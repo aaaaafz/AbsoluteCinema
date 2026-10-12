@@ -110,17 +110,6 @@ The downloadable release contains the compiled application, required Gson librar
 - **Graphical User Interface:** Provides the desktop screens and user interactions.
 - **Movie Management:** Supports adding movies, tracking watched status, and personal ratings.
 
-## 🧪 Testing
-
-The following areas should be tested before submitting the project:
-
-- Launching the application successfully.
-- Adding and viewing movies in the watchlist.
-- Marking a movie as watched.
-- Saving and retrieving personal ratings.
-- Searching for movies when the internet is available.
-- Handling missing API credentials or unavailable online services.
-- Confirming that saved watchlist data remains available after restarting the application.
 
 ## 🔮 Future Enhancements
 
@@ -131,10 +120,4 @@ The following areas should be tested before submitting the project:
 - Search and filtering within the personal watchlist.
 - Exporting watchlist data and generating statistics.
 
-## 🎓 Academic Project
 
-AbsoluteCinema is a Java desktop application project demonstrating object-oriented programming, graphical user interface development, API integration, JSON processing, and file handling.
-
-## 📄 License
-
-Choose and add a suitable license before allowing others to reuse or redistribute this project. Until then, no specific open-source license is declared.

@@ -3111,7 +3111,7 @@ private void toggleLike() {
                 trendBody.add(sideRow(m, ++rank, 36, 52, false));
             }
             if (rank > 0) {
-                side.add(sideCard("Trending on AbsoluteCinema", null, trendBody));
+                side.add(sideCard("Trending on TMDB", null, trendBody));
             }
 
             sideHolder.setOpaque(false);

@@ -1,0 +1,8 @@
+@"
+out/
+*.class
+.env
+.env.*
+!.env.example
+.idea/
+"@ | Set-Content .gitignore

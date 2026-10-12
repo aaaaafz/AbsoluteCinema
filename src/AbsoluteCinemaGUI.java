@@ -850,79 +850,130 @@ item.setMargin(new Insets(0, 0, 0, 0));
         Map<Integer, String> genres = new LinkedHashMap<>();
     }
 
-    private void showDiscoverPage() {
-        currentPage = "Home";
-        final int token = ++navToken;
+    
+private void showDiscoverPage() {
+    currentPage = "Home";
+    final int token = ++navToken;
 
-        ScrollPanel sections = new ScrollPanel(null);
-        sections.setLayout(new BoxLayout(sections, BoxLayout.Y_AXIS));
-        sections.setBackground(background);
+    ScrollPanel sections = new ScrollPanel(null);
+    sections.setLayout(new BoxLayout(sections, BoxLayout.Y_AXIS));
+    sections.setBackground(background);
 
-        showPageContent(null, createScroll(sections));
-        setStatus("Loading cinematic discoveries...");
+    showPageContent(null, createScroll(sections));
+    setStatus("Loading cinematic discoveries...");
 
-        new SwingWorker<HomeData, Void>() {
-            @Override
-            protected HomeData doInBackground() throws Exception {
-                HomeData data = new HomeData();
-                data.trending = parseMovies(TmdbClient.getTrendingMovies());
-                data.recommended = parseMovies(TmdbClient.getTopRatedMovies());
-                try {
-                    data.genres = TmdbClient.getMovieGenres();
-                } catch (Exception ignored) {
-                    data.genres = new LinkedHashMap<>();
-                }
-                return data;
+    new SwingWorker<HomeData, Void>() {
+        @Override
+        protected HomeData doInBackground() {
+            HomeData data = new HomeData();
+
+            try {
+                data.trending =
+                        parseMovies(TmdbClient.getTrendingMovies());
+            } catch (Exception ignored) {
+                data.trending = new ArrayList<>();
             }
 
-            @Override
-            protected void done() {
-                if (token != navToken) {
-                    return;
+            try {
+                data.recommended =
+                        parseMovies(TmdbClient.getTopRatedMovies());
+            } catch (Exception ignored) {
+                data.recommended = new ArrayList<>();
+            }
+
+            try {
+                data.genres = TmdbClient.getMovieGenres();
+            } catch (Exception ignored) {
+                data.genres = new LinkedHashMap<>();
+            }
+
+            return data;
+        }
+
+        @Override
+        protected void done() {
+            if (token != navToken) {
+                return;
+            }
+
+            try {
+                HomeData data = get();
+                sections.removeAll();
+
+                List<TmdbMovie> featured = new ArrayList<>();
+
+                for (TmdbMovie movie : data.trending) {
+                    String path = movie.getBackdropPath();
+
+                    if (path != null && !path.isBlank()) {
+                        featured.add(movie);
+                    }
+
+                    if (featured.size() == 4) {
+                        break;
+                    }
                 }
-                try {
-                    HomeData data = get();
-                    sections.removeAll();
 
-                    List<TmdbMovie> featured = new ArrayList<>();
-                    for (TmdbMovie m : data.trending) {
-                        String path = m.getBackdropPath();
-                        if (path != null && !path.isBlank()) {
-                            featured.add(m);
-                        }
-                        if (featured.size() == 4) {
-                            break;
-                        }
-                    }
-                    if (featured.isEmpty() && !data.trending.isEmpty()) {
-                        featured.addAll(data.trending.subList(
-                                0, Math.min(4, data.trending.size())));
-                    }
+                if (featured.isEmpty() && !data.trending.isEmpty()) {
+                    featured.addAll(data.trending.subList(
+                            0, Math.min(4, data.trending.size())
+                    ));
+                }
 
-                    if (!featured.isEmpty()) {
-                        HeroBanner hero = new HeroBanner(featured);
-                        activeHero = hero;
-                        sections.add(hero);
-                        sections.add(Box.createVerticalStrut(8));
-                    }
+                if (!featured.isEmpty()) {
+                    HeroBanner hero = new HeroBanner(featured);
+                    activeHero = hero;
+                    sections.add(hero);
+                    sections.add(Box.createVerticalStrut(8));
+                }
 
-                    addMovieRow(sections, "Trending Now", data.trending,
-                            () -> navigateTo("Discover"));
-                    addMovieRow(sections, "Recommended for You", data.recommended,
-                            () -> navigateTo("Top Rated"));
-                    addGenreSection(sections, data.genres);
+                addMovieRow(sections, "Trending Now", data.trending,
+                        () -> navigateTo("Discover"));
 
-                    sections.revalidate();
-                    sections.repaint();
+                addMovieRow(sections, "Recommended for You",
+                        data.recommended,
+                        () -> navigateTo("Top Rated"));
+
+                addGenreSection(sections, data.genres);
+
+                if (data.trending.isEmpty()
+                        && data.recommended.isEmpty()) {
+                    JLabel offlineMessage = new JLabel(
+                            "<html><div style='text-align:center;'>"
+                            + "<h2>Online discovery is unavailable</h2>"
+                            + "Connect to the internet and configure a "
+                            + "valid TMDB access token to load movies."
+                            + "<br>Your local watchlist can still be used."
+                            + "</div></html>"
+                    );
+
+                    offlineMessage.setForeground(textColor);
+                    offlineMessage.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    offlineMessage.setBorder(
+                            new EmptyBorder(50, 20, 50, 20)
+                    );
+
+                    sections.add(offlineMessage);
+                }
+
+                sections.revalidate();
+                sections.repaint();
+
+                if (data.trending.isEmpty()
+                        && data.recommended.isEmpty()) {
+                    setStatus("Offline mode: online movies unavailable.");
+                } else {
                     setStatus("Discovery loaded.");
-                } catch (Exception e) {
-    e.printStackTrace();
-    showError("Could not load the discovery page.", e);
-    setStatus("Movie loading failed.");
-}
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                setStatus("Could not finish loading movie discovery.");
             }
-        }.execute();
-    }
+        }
+    }.execute();
+}
+
 
     private void addMovieRow(JPanel parent, String title,
                              List<TmdbMovie> list, Runnable seeAll) {

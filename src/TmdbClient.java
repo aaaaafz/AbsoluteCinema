@@ -21,18 +21,46 @@ public class TmdbClient {
 
     private static final Gson gson = new Gson();
 
-    private static String getToken() {
+    
+private static String getToken() {
+    String token = System.getenv("TMDB_READ_ACCESS_TOKEN");
 
-        String token = System.getenv("TMDB_READ_ACCESS_TOKEN");
-
-        if (token == null || token.isBlank()) {
-            throw new IllegalStateException(
-                    "TMDB token is missing. Check your environment variable."
-            );
-        }
-
-        return token;
+    if (token != null && !token.isBlank()) {
+        return token.trim();
     }
+
+    java.util.Properties properties = new java.util.Properties();
+
+    String[] files = {
+        "tmdb.properties.local",
+        "tmdb.properties"
+    };
+
+    for (String file : files) {
+        try (java.io.InputStream input =
+                java.nio.file.Files.newInputStream(
+                    java.nio.file.Path.of(file))) {
+
+            properties.clear();
+            properties.load(input);
+
+            token = properties.getProperty("TMDB_READ_ACCESS_TOKEN");
+
+            if (token != null && !token.isBlank()
+                    && !token.equals("PASTE_YOUR_OWN_TMDB_TOKEN_HERE")) {
+                return token.trim();
+            }
+
+        } catch (java.io.IOException ignored) {
+        }
+    }
+
+    throw new IllegalStateException(
+        "TMDB token is missing. Configure tmdb.properties.local "
+        + "or the TMDB_READ_ACCESS_TOKEN environment variable."
+    );
+}
+
 
     private static String getJson(String endpoint)
             throws Exception {
